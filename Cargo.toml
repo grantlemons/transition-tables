@@ -1,0 +1,8 @@
+[package]
+name = "read-definitions"
+version = "0.1.0"
+publish = false
+edition = "2021"
+license = "CC0"
+
+[dependencies]
