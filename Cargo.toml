@@ -1,5 +1,5 @@
 [package]
-name = "read-definitions"
+name = "transition-tables"
 version = "0.1.0"
 publish = false
 edition = "2021"

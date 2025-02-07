@@ -1,5 +1,3 @@
-use std::error::Error;
-
 /// A transition in the DFA transition table
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TransitionTableTransition {
