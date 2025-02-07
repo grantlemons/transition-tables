@@ -32,7 +32,7 @@ pub struct TransitionTable {
 }
 
 /// Errors that can occur when parsing or serializing a transition table
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub struct ParseSerializeError {
     /// The error message
     pub message: String,

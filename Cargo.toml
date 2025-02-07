@@ -6,3 +6,4 @@ edition = "2021"
 license = "CC0"
 
 [dependencies]
+thiserror = "2.0.11"
