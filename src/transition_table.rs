@@ -1,13 +1,3 @@
-/// A transition in the DFA transition table
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum TransitionTableTransition {
-    /// A transition to a state
-    Ok(usize),
-
-    /// A transition to an error state
-    Err,
-}
-
 /// The starting state ID
 pub const STARTING_STATE_ID: usize = 0;
 
@@ -21,7 +11,7 @@ pub struct TransitionTableRow {
     pub id: usize,
 
     /// The row's state transitions
-    pub transitions: Vec<TransitionTableTransition>,
+    pub transitions: Vec<Option<usize>>,
 }
 
 /// A DFA transition table
@@ -112,19 +102,17 @@ impl TransitionTable {
             for (column_index, column) in columns.iter().skip(2).enumerate() {
                 // Parse the transition
                 if *column == ERROR_SYMBOL {
-                    row.transitions.push(TransitionTableTransition::Err);
+                    row.transitions.push(None);
                 } else {
                     row.transitions
-                        .push(TransitionTableTransition::Ok(column.parse().map_err(
-                            |e| ParseSerializeError {
-                                message: format!(
-                                    "Line {} column {} has an invalid transition: {}",
-                                    line_index + 1,
-                                    column_index + 3,
-                                    e
-                                ),
-                            },
-                        )?))
+                        .push(Some(column.parse().map_err(|e| ParseSerializeError {
+                            message: format!(
+                                "Line {} column {} has an invalid transition: {}",
+                                line_index + 1,
+                                column_index + 3,
+                                e
+                            ),
+                        })?))
                 }
             }
 
@@ -153,11 +141,11 @@ impl TransitionTable {
             // Write the transitions
             for transition in &row.transitions {
                 match transition {
-                    TransitionTableTransition::Ok(state) => {
+                    Some(state) => {
                         output.push(' ');
                         output.push_str(&state.to_string());
                     }
-                    TransitionTableTransition::Err => {
+                    None => {
                         output.push(' ');
                         output.push_str(ERROR_SYMBOL);
                     }
@@ -193,83 +181,47 @@ mod tests {
         assert_eq!(table.rows[0].accepting, false);
         assert_eq!(table.rows[0].id, 0);
         assert_eq!(table.rows[0].transitions.len(), 5);
-        assert_eq!(
-            table.rows[0].transitions[0],
-            TransitionTableTransition::Ok(1)
-        );
-        assert_eq!(table.rows[0].transitions[1], TransitionTableTransition::Err);
-        assert_eq!(table.rows[0].transitions[2], TransitionTableTransition::Err);
-        assert_eq!(table.rows[0].transitions[3], TransitionTableTransition::Err);
-        assert_eq!(table.rows[0].transitions[4], TransitionTableTransition::Err);
+        assert_eq!(table.rows[0].transitions[0], Some(1));
+        assert_eq!(table.rows[0].transitions[1], None);
+        assert_eq!(table.rows[0].transitions[2], None);
+        assert_eq!(table.rows[0].transitions[3], None);
+        assert_eq!(table.rows[0].transitions[4], None);
 
         assert_eq!(table.rows[1].accepting, false);
         assert_eq!(table.rows[1].id, 1);
         assert_eq!(table.rows[1].transitions.len(), 5);
-        assert_eq!(table.rows[1].transitions[0], TransitionTableTransition::Err);
-        assert_eq!(
-            table.rows[1].transitions[1],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(table.rows[1].transitions[2], TransitionTableTransition::Err);
-        assert_eq!(table.rows[1].transitions[3], TransitionTableTransition::Err);
-        assert_eq!(table.rows[1].transitions[4], TransitionTableTransition::Err);
+        assert_eq!(table.rows[1].transitions[0], None);
+        assert_eq!(table.rows[1].transitions[1], Some(2));
+        assert_eq!(table.rows[1].transitions[2], None);
+        assert_eq!(table.rows[1].transitions[3], None);
+        assert_eq!(table.rows[1].transitions[4], None);
 
         assert_eq!(table.rows[2].accepting, false);
         assert_eq!(table.rows[2].id, 2);
         assert_eq!(table.rows[2].transitions.len(), 5);
-        assert_eq!(
-            table.rows[2].transitions[0],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(
-            table.rows[2].transitions[1],
-            TransitionTableTransition::Ok(3)
-        );
-        assert_eq!(
-            table.rows[2].transitions[2],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(
-            table.rows[2].transitions[3],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(
-            table.rows[2].transitions[4],
-            TransitionTableTransition::Ok(2)
-        );
+        assert_eq!(table.rows[2].transitions[0], Some(2));
+        assert_eq!(table.rows[2].transitions[1], Some(3));
+        assert_eq!(table.rows[2].transitions[2], Some(2));
+        assert_eq!(table.rows[2].transitions[3], Some(2));
+        assert_eq!(table.rows[2].transitions[4], Some(2));
 
         assert_eq!(table.rows[3].accepting, false);
         assert_eq!(table.rows[3].id, 3);
         assert_eq!(table.rows[3].transitions.len(), 5);
-        assert_eq!(
-            table.rows[3].transitions[0],
-            TransitionTableTransition::Ok(4)
-        );
-        assert_eq!(
-            table.rows[3].transitions[1],
-            TransitionTableTransition::Ok(3)
-        );
-        assert_eq!(
-            table.rows[3].transitions[2],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(
-            table.rows[3].transitions[3],
-            TransitionTableTransition::Ok(2)
-        );
-        assert_eq!(
-            table.rows[3].transitions[4],
-            TransitionTableTransition::Ok(2)
-        );
+        assert_eq!(table.rows[3].transitions[0], Some(4));
+        assert_eq!(table.rows[3].transitions[1], Some(3));
+        assert_eq!(table.rows[3].transitions[2], Some(2));
+        assert_eq!(table.rows[3].transitions[3], Some(2));
+        assert_eq!(table.rows[3].transitions[4], Some(2));
 
         assert_eq!(table.rows[4].accepting, true);
         assert_eq!(table.rows[4].id, 4);
         assert_eq!(table.rows[4].transitions.len(), 5);
-        assert_eq!(table.rows[4].transitions[0], TransitionTableTransition::Err);
-        assert_eq!(table.rows[4].transitions[1], TransitionTableTransition::Err);
-        assert_eq!(table.rows[4].transitions[2], TransitionTableTransition::Err);
-        assert_eq!(table.rows[4].transitions[3], TransitionTableTransition::Err);
-        assert_eq!(table.rows[4].transitions[4], TransitionTableTransition::Err);
+        assert_eq!(table.rows[4].transitions[0], None);
+        assert_eq!(table.rows[4].transitions[1], None);
+        assert_eq!(table.rows[4].transitions[2], None);
+        assert_eq!(table.rows[4].transitions[3], None);
+        assert_eq!(table.rows[4].transitions[4], None);
 
         Ok(())
     }
@@ -281,57 +233,27 @@ mod tests {
                 TransitionTableRow {
                     accepting: false,
                     id: 0,
-                    transitions: vec![
-                        TransitionTableTransition::Ok(1),
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                    ],
+                    transitions: vec![Some(1), None, None, None, None],
                 },
                 TransitionTableRow {
                     accepting: false,
                     id: 1,
-                    transitions: vec![
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                    ],
+                    transitions: vec![None, Some(2), None, None, None],
                 },
                 TransitionTableRow {
                     accepting: false,
                     id: 2,
-                    transitions: vec![
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Ok(3),
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Ok(2),
-                    ],
+                    transitions: vec![Some(2), Some(3), Some(2), Some(2), Some(2)],
                 },
                 TransitionTableRow {
                     accepting: false,
                     id: 3,
-                    transitions: vec![
-                        TransitionTableTransition::Ok(4),
-                        TransitionTableTransition::Ok(3),
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Ok(2),
-                        TransitionTableTransition::Ok(2),
-                    ],
+                    transitions: vec![Some(4), Some(3), Some(2), Some(2), Some(2)],
                 },
                 TransitionTableRow {
                     accepting: true,
                     id: 4,
-                    transitions: vec![
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                        TransitionTableTransition::Err,
-                    ],
+                    transitions: vec![None, None, None, None, None],
                 },
             ],
         };
