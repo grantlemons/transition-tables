@@ -152,9 +152,7 @@ impl TransitionTable {
                 }
             }
 
-            if row_index < self.rows.len() - 1 {
-                output.push('\n');
-            }
+            output.push('\n');
         }
 
         Ok(output)
@@ -170,7 +168,8 @@ mod tests {
 - 1 E 2 E E E
 - 2 2 3 2 2 2
 - 3 4 3 2 2 2
-+ 4 E E E E E"#;
++ 4 E E E E E
+"#;
 
     #[test]
     fn transition_table_parse() -> Result<(), ParseSerializeError> {
