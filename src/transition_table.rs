@@ -130,7 +130,7 @@ impl TransitionTable {
     pub fn serialize(&self) -> Result<String, ParseSerializeError> {
         let mut output = String::new();
 
-        for (row_index, row) in self.rows.iter().enumerate() {
+        for row in &self.rows {
             // Write the accepting state
             output.push(if row.accepting { '+' } else { '-' });
             output.push(' ');
